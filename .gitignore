@@ -1,0 +1,55 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+.env.bak
+.venv/
+
+# Editor/IDE config
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker
+**/data/
+**/logs/
+**/tmp/
+**/cache/
+*.pid
+
+# PostgreSQL volume (if using bind mounts)
+postgres/data/
+
+# Python test cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+
+# MQTT Broker
+mosquitto/data/
+mosquitto/log/
+mosquitto/config/mosquitto.conf~
+
+# Compiled protobufs
+*.pb.go
+*.pb.cc
+*.pb.h
+*.pb.c
+*.pb.py
+
+# Jupyter Notebooks (optional)
+.ipynb_checkpoints/
+
+# Draw.io backups
+*.drawio.bak

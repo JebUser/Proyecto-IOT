@@ -1,0 +1,73 @@
+version: "3.9"
+
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001" # WebSocket (opcional)
+    volumes:
+      - ./mqtt_broker/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: iotuser
+      POSTGRES_PASSWORD: iotpass
+      POSTGRES_DB: health_data
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+  gateway:
+    build: ./gateway
+    container_name: iot-gateway
+    ports:
+      - "5000:5000" # REST
+      - "5001:5001" # gRPC
+      - "5002:5002" # WebSockets
+    depends_on:
+      - mqtt-broker
+    restart: unless-stopped
+
+  subscriber:
+    build: ./subscriber
+    container_name: mqtt-subscriber
+    depends_on:
+      - mqtt-broker
+      - postgres
+    restart: unless-stopped
+
+  sensor-rest:
+    build: ./sensors/rest
+    container_name: sensor-rest
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  sensor-grpc:
+    build: ./sensors/grpc
+    container_name: sensor-grpc
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+  sensor-ws:
+    build: ./sensors/websocket
+    container_name: sensor-ws
+    depends_on:
+      - gateway
+    restart: unless-stopped
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+  postgres_data:
