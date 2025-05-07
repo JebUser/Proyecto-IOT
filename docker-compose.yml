@@ -1,6 +1,7 @@
 version: "3.9"
 
 services:
+  # 🟢 MQTT Broker - Mosquitto
   mqtt-broker:
     image: eclipse-mosquitto:2
     container_name: mqtt-broker
@@ -8,11 +9,12 @@ services:
       - "1883:1883"
       - "9001:9001" # WebSocket (opcional)
     volumes:
-      - ./mqtt_broker/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     restart: unless-stopped
 
+  # 🟡 Base de Datos PostgreSQL
   postgres:
     image: postgres:15
     container_name: postgres-db
@@ -27,17 +29,19 @@ services:
       - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
+  # 🧠 Gateway IoT - recibe REST, gRPC y WebSocket
   gateway:
     build: ./gateway
     container_name: iot-gateway
     ports:
       - "5000:5000" # REST
       - "5001:5001" # gRPC
-      - "5002:5002" # WebSockets
+      - "5002:5002" # WebSocket
     depends_on:
       - mqtt-broker
     restart: unless-stopped
 
+  # 📥 Subscriber MQTT -> PostgreSQL
   subscriber:
     build: ./subscriber
     container_name: mqtt-subscriber
@@ -46,6 +50,7 @@ services:
       - postgres
     restart: unless-stopped
 
+  # 🔴 Sensor REST
   sensor-rest:
     build: ./sensors/rest
     container_name: sensor-rest
@@ -53,6 +58,7 @@ services:
       - gateway
     restart: unless-stopped
 
+  # 🔵 Sensor gRPC
   sensor-grpc:
     build: ./sensors/grpc
     container_name: sensor-grpc
@@ -60,6 +66,7 @@ services:
       - gateway
     restart: unless-stopped
 
+  # 🟣 Sensor WebSocket
   sensor-ws:
     build: ./sensors/websocket
     container_name: sensor-ws
