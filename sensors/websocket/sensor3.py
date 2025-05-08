@@ -1,7 +1,7 @@
 import asyncio
 import websockets
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import random
 
 GATEWAY_URI = "ws://iot-gateway:5002"
@@ -11,8 +11,9 @@ async def enviar_datos():
         while True:
             data = {
                 "nombre_sensor": "sensor-ws-1",
-                "timestamp": datetime.utcnow().isoformat(),
-                "valor": round(random.uniform(36.0, 39.0), 2)
+                "fecha_registro": datetime.now(timezone.utc).isoformat(),
+                "tipo_valor": "presion arterial sistolica (mmHg)",
+                "valor": round(random.uniform(100.0, 139.0), 2)
             }
             await websocket.send(json.dumps(data))
             print(f"Enviado: {data}")

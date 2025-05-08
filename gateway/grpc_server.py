@@ -8,7 +8,8 @@ class SensorService(sensor_pb2_grpc.SensorServiceServicer):
     def SendData(self, request, context):
         data = {
             "nombre_sensor": request.nombre_sensor,
-            "timestamp": request.timestamp,
+            "fecha_registro": request.fecha_registro,
+            "tipo_valor": request.tipo_valor,
             "valor": request.valor
         }
         publicar_en_mqtt(data)

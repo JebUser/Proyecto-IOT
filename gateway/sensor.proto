@@ -8,8 +8,9 @@ service SensorService {
 
 message SensorData {
   string nombre_sensor = 1;
-  string timestamp = 2;
-  float valor = 3;
+  string fecha_registro = 2;
+  string tipo_dato = 3;
+  float valor = 4;
 }
 
 message Response {

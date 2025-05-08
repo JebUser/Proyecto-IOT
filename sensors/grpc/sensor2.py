@@ -1,7 +1,7 @@
 import grpc
 import time
 import random
-from datetime import datetime
+from datetime import datetime, timezone
 import sensor_pb2
 import sensor_pb2_grpc
 
@@ -10,8 +10,9 @@ GATEWAY_HOST = "iot-gateway:5001"
 def generar_dato():
     return sensor_pb2.SensorData(
         nombre_sensor="sensor-grpc-1",
-        timestamp=datetime.utcnow().isoformat(),
-        valor=round(random.uniform(36.0, 39.0), 2)
+        fecha_registro=datetime.now(timezone.utc).isoformat(),
+        tipo_dato="ritmo cardiaco (BPM)",
+        valor=round(random.uniform(60.0, 100.0), 1)
     )
 
 def run():
