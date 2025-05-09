@@ -1,5 +1,6 @@
-flask
-paho-mqtt
-grpcio
-grpcio-tools
-websockets
+flask==2.0.3
+werkzeug==2.0.3
+paho-mqtt==1.6.1
+grpcio==1.39.0
+grpcio-tools==1.39.0
+websockets==10.1

@@ -1,86 +1,103 @@
-version: "3.9"
+version: "3.8"
 
 services:
-  # 🟢 MQTT Broker - Mosquitto
-  mqtt-broker:
-    image: eclipse-mosquitto:2
-    container_name: mqtt-broker
-    ports:
-      - "1883:1883"
-      - "9001:9001" # WebSocket (opcional)
-    volumes:
-      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
-      - mosquitto_data:/mosquitto/data
-      - mosquitto_log:/mosquitto/log
-    restart: unless-stopped
-
-  # 🟡 Base de Datos PostgreSQL
+  # Base de datos PostgreSQL
   postgres:
-    image: postgres:15
-    container_name: postgres-db
+    image: postgres:13
+    container_name: postgres
     environment:
-      POSTGRES_USER: iotuser
-      POSTGRES_PASSWORD: iotpass
-      POSTGRES_DB: health_data
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: healthcare
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: unless-stopped
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - iot-network
 
-  # 🧠 Gateway IoT - recibe REST, gRPC y WebSocket
+  # Broker MQTT
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mqtt-broker:/mosquitto/config
+    networks:
+      - iot-network
+
+  # IoT Gateway
   gateway:
     build: ./gateway
-    container_name: iot-gateway
+    container_name: gateway
     ports:
       - "5000:5000" # REST
       - "5001:5001" # gRPC
       - "5002:5002" # WebSocket
     depends_on:
       - mqtt-broker
-    restart: unless-stopped
+    networks:
+      - iot-network
 
-  # 📥 Subscriber MQTT -> PostgreSQL
+  # Subscriptor MQTT
   subscriber:
     build: ./subscriber
-    container_name: mqtt-subscriber
+    container_name: subscriber
     depends_on:
       - mqtt-broker
       - postgres
-    restart: unless-stopped
-
-  # 🔴 Sensor REST
-  sensor-rest:
-    build: ./sensors/rest
-    container_name: sensor-rest
     environment:
-      - INTERVALO_SEGUNDOS=60
+      MQTT_BROKER: "mqtt-broker"
+      POSTGRES_HOST: "postgres"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+      POSTGRES_DB: "healthcare"
+    networks:
+      - iot-network
+
+  # Sensor de temperatura (REST)
+  sensor-temperature:
+    build: ./sensor_temperature
+    container_name: sensor-temperature
     depends_on:
       - gateway
-    restart: unless-stopped
-
-  # 🔵 Sensor gRPC
-  sensor-grpc:
-    build: ./sensors/grpc
-    container_name: sensor-grpc
     environment:
-      - INTERVALO_SEGUNDOS=60
+      GATEWAY_URL: "http://gateway:5000/temperature"
+      PATIENT_ID: "1"
+    networks:
+      - iot-network
+
+  # Sensor de ritmo cardíaco (gRPC)
+  sensor-heartrate:
+    build: ./sensor_heartrate
+    container_name: sensor-heartrate
     depends_on:
       - gateway
-    restart: unless-stopped
-
-  # 🟣 Sensor WebSocket
-  sensor-ws:
-    build: ./sensors/websocket
-    container_name: sensor-ws
     environment:
-      - INTERVALO_SEGUNDOS=60
+      GATEWAY_HOST: "gateway"
+      GATEWAY_PORT: "5001"
+      PATIENT_ID: "2"
+    networks:
+      - iot-network
+
+  # Sensor de presión arterial (WebSocket)
+  sensor-bloodpressure:
+    build: ./sensor_bloodpressure
+    container_name: sensor-bloodpressure
     depends_on:
       - gateway
-    restart: unless-stopped
+    environment:
+      GATEWAY_WS_URL: "ws://gateway:5002/bloodpressure"
+      PATIENT_ID: "3"
+    networks:
+      - iot-network
 
 volumes:
-  mosquitto_data:
-  mosquitto_log:
   postgres_data:
+
+networks:
+  iot-network:
+    driver: bridge

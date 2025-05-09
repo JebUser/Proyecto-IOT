@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package healthcare;
+
+service Healthcare {
+    rpc SendHeartRate (HeartRateRequest) returns (HealthResponse);
+}
+
+message HeartRateRequest {
+    int32 patient_id = 1;
+    int32 heart_rate = 2;
+}
+
+message HealthResponse {
+    string status = 1;
+}

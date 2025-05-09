@@ -1,10 +1,10 @@
-FROM python:3.10-slim
+FROM python:3.9-slim
 
 WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY sensor1.py .
+COPY . .
 
-CMD ["python", "sensor1.py"]
+CMD ["python", "sensor.py"]

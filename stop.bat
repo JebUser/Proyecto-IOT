@@ -1,6 +1,8 @@
-#!/bin/bash
-
-echo "Deteniendo contenedores..."
-docker-compose down -v --remove-orphans
-
-echo "Proyecto detenido y volumenes eliminados."
+@echo off
+echo Deteniendo proyecto IoT de salud...
+docker-compose down -v
+echo Eliminando contenedores huérfanos...
+docker-compose rm -fsv
+echo Limpiando recursos no utilizados...
+docker system prune -f
+pause

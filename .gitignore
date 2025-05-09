@@ -1,55 +1,30 @@
-# Byte-compiled / optimized / DLL files
+# Docker
+**/docker-compose.override.yml
+**/.dockerignore
+**/.env
+
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
+*.pyc
+*.pyo
+*.pyd
+*.pyc
 
-# Virtual environment
-venv/
-.env/
-.env.bak
-.venv/
+# Database
+*.db
+*.sqlite
+*.dump
 
-# Editor/IDE config
+# Logs
+*.log
+logs/
+
+# IDE
 .vscode/
 .idea/
-*.sublime-project
-*.sublime-workspace
+*.swp
+*.swo
 
-# OS files
-.DS_Store
-Thumbs.db
-
-# Docker
-**/data/
-**/logs/
-**/tmp/
-**/cache/
-*.pid
-
-# PostgreSQL volume (if using bind mounts)
-postgres/data/
-
-# Python test cache
-.pytest_cache/
-nosetests.xml
-coverage.xml
-*.cover
-*.log
-
-# MQTT Broker
-mosquitto/data/
-mosquitto/log/
-mosquitto/config/mosquitto.conf~
-
-# Compiled protobufs
-*.pb.go
-*.pb.cc
-*.pb.h
-*.pb.c
-*.pb.py
-
-# Jupyter Notebooks (optional)
-.ipynb_checkpoints/
-
-# Draw.io backups
-*.drawio.bak
+# Sensores
+**/healthcare_pb2*
+**/*_pb2*.py

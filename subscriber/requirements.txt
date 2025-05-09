@@ -1,2 +1,2 @@
-paho-mqtt
-psycopg2-binary
+paho-mqtt==1.6.1
+psycopg2-binary==2.9.1

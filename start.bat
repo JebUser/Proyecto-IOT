@@ -1,9 +1,6 @@
-#!/bin/bash
-
-echo "Construyendo contenedores..."
-docker-compose build
-
-echo "Levantando proyecto..."
-docker-compose up -d
-
-echo "Proyecto iniciado. Usa 'docker-compose logs -f' para ver logs."
+@echo off
+echo Iniciando proyecto IoT de salud...
+docker-compose down -v
+docker-compose build --no-cache
+docker-compose up
+pause
