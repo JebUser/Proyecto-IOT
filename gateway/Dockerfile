@@ -9,4 +9,4 @@ COPY . .
 
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. sensor.proto
 
-CMD ["sh", "-c", "python rest_server.py & python grpc_server.py & python websocket_server.py"]
+CMD ["python", "gateway_entrypoint.py"]

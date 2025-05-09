@@ -8,10 +8,14 @@ async def manejar_cliente(websocket, path):
         try:
             data = json.loads(mensaje)
             publicar_en_mqtt(data)
+            print(f"[✓] Dato recibido por WebSocket: {data}")
         except Exception as e:
-            print(f"Error procesando mensaje: {e}")
+            print(f"[✗] Error procesando mensaje: {e}")
 
-start_server = websockets.serve(manejar_cliente, "0.0.0.0", 5002)
+async def main():
+    async with websockets.serve(manejar_cliente, "0.0.0.0", 5002):
+        print("Servidor WebSocket corriendo en puerto 5002")
+        await asyncio.Future()  # espera infinita
 
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+if __name__ == '__main__':
+    asyncio.run(main())

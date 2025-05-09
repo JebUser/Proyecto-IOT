@@ -54,6 +54,8 @@ services:
   sensor-rest:
     build: ./sensors/rest
     container_name: sensor-rest
+    environment:
+      - INTERVALO_SEGUNDOS=60
     depends_on:
       - gateway
     restart: unless-stopped
@@ -62,6 +64,8 @@ services:
   sensor-grpc:
     build: ./sensors/grpc
     container_name: sensor-grpc
+    environment:
+      - INTERVALO_SEGUNDOS=60
     depends_on:
       - gateway
     restart: unless-stopped
@@ -70,6 +74,8 @@ services:
   sensor-ws:
     build: ./sensors/websocket
     container_name: sensor-ws
+    environment:
+      - INTERVALO_SEGUNDOS=60
     depends_on:
       - gateway
     restart: unless-stopped

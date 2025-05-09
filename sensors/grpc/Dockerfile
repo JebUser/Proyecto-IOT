@@ -8,6 +8,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY sensor.proto .
 RUN python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. sensor.proto
 
-COPY sensor.py .
+COPY sensor2.py .
 
-CMD ["python", "sensor.py"]
+CMD ["python", "sensor2.py"]

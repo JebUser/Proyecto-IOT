@@ -1,8 +1,12 @@
 import time
 import requests
 import json
+import os
 from datetime import datetime, timezone
 import random
+
+INTERVALO = int(os.getenv("INTERVALO_SEGUNDOS", 60))  # 60 segundos por defecto
+
 
 GATEWAY_URL = "http://iot-gateway:5000/data"
 
@@ -21,4 +25,4 @@ while True:
         print(f"Enviado: {data} -> status {res.status_code}")
     except Exception as e:
         print(f"Error al enviar: {e}")
-    time.sleep(3)
+    time.sleep(INTERVALO)

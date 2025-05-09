@@ -12,6 +12,7 @@ class SensorService(sensor_pb2_grpc.SensorServiceServicer):
             "tipo_valor": request.tipo_valor,
             "valor": request.valor
         }
+        print(f"[gRPC] Recibido: {data}")
         publicar_en_mqtt(data)
         return sensor_pb2.Response(status="ok")
 
@@ -20,6 +21,7 @@ def serve():
     sensor_pb2_grpc.add_SensorServiceServicer_to_server(SensorService(), server)
     server.add_insecure_port('[::]:5001')
     server.start()
+    print("[gRPC] Servidor corriendo en puerto 5001")
     server.wait_for_termination()
 
 if __name__ == '__main__':

@@ -5,6 +5,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY sensor.py .
+COPY sensor3.py .
 
-CMD ["python", "sensor.py"]
+CMD ["python", "sensor3.py"]
