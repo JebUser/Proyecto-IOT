@@ -74,6 +74,9 @@ healthcare-iot/
 -- Ver todos los pacientes
 SELECT * FROM patients;
 
+-- Ver todos los sensores
+SELECT * FROM sensors;
+
 -- Últimas lecturas
 SELECT * FROM sensor_readings ORDER BY timestamp;
 
@@ -81,10 +84,22 @@ SELECT * FROM sensor_readings ORDER BY timestamp;
 SELECT * FROM sensor_readings ORDER BY timestamp DESC LIMIT 10;
 
 -- Por metrica
-SELECT patient_id, value, unit, timestamp
-FROM sensor_readings
-WHERE sensor_type = '<<reemplazar tu metrica>>'
-ORDER BY timestamp DESC;
+SELECT
+    p.name AS nombre_paciente,
+    s.name AS nombre_sensor,
+    sr.value AS valor,
+    s.unit AS unidad,
+    sr.timestamp AS tiempo
+FROM
+    sensor_readings sr
+JOIN
+    patients p ON sr.patient_id = p.patient_id
+JOIN
+    sensors s ON sr.sensor_id = s.sensor_id
+WHERE
+    s.sensor_id = <<reemplazar>>
+ORDER BY
+    sr.timestamp DESC;
 ```
 
 ## Detener el proyecto

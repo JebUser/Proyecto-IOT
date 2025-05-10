@@ -21,6 +21,13 @@ DB_USER = os.getenv("POSTGRES_USER", "admin")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "admin")
 DB_NAME = os.getenv("POSTGRES_DB", "healthcare")
 
+# Mapeo de tipos de sensor a IDs
+SENSOR_TYPE_MAP = {
+    "temperature": 1,  # Temperatura Corporal
+    "heart_rate": 2,   # Ritmo Cardíaco
+    "blood_pressure": 3  # Presión Arterial
+}
+
 def get_db_connection():
     """
     Establece y retorna una conexión a la base de datos PostgreSQL.
@@ -56,13 +63,19 @@ def on_message(client, userdata, msg):
     cur = None
     try:
         data = json.loads(msg.payload.decode())
+        sensor_id = SENSOR_TYPE_MAP.get(data['sensor_type'])
+        
+        if not sensor_id:
+            print(f"Error: tipo de sensor desconocido {data['sensor_type']}")
+            return
+            
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Insertar datos (value ya viene en formato string desde los sensores)
+        # Insertar datos usando sensor_id
         cur.execute(
-            "INSERT INTO sensor_readings (patient_id, sensor_type, value, unit) VALUES (%s, %s, %s, %s)",
-            (data['patient_id'], data['sensor_type'], str(data['value']), data.get('unit', ''))
+            "INSERT INTO sensor_readings (patient_id, sensor_id, value) VALUES (%s, %s, %s)",
+            (data['patient_id'], sensor_id, str(data['value']))
         )
         
         conn.commit()

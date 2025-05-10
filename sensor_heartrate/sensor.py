@@ -36,7 +36,7 @@ def send_heart_rate():
     Establece una conexión gRPC con el gateway y envía datos cada 5 segundos.
     Los datos incluyen:
     - ID del paciente
-    - Valor del ritmo cardíaco (BPM)
+    - Valor del ritmo cardíaco
     """
     channel = grpc.insecure_channel(f"{GATEWAY_HOST}:{GATEWAY_PORT}")
     stub = healthcare_pb2_grpc.HealthcareStub(channel)

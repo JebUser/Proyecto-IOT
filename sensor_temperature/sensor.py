@@ -34,17 +34,13 @@ def send_temperature():
     Envía datos cada 10 segundos al gateway mediante POST request.
     Los datos incluyen:
     - ID del paciente
-    - Tipo de sensor (temperature)
     - Valor de temperatura
-    - Unidad de medida (°C)
     """
     while True:
         temp = generate_temperature()
         data = {
             "patient_id": PATIENT_ID,
-            "sensor_type": "temperature",
-            "value": str(temp),
-            "unit": "°C"
+            "value": str(temp)
         }
         
         try:

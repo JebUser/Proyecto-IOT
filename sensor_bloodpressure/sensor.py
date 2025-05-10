@@ -41,17 +41,13 @@ async def send_blood_pressure():
     Establece una conexión WebSocket con el gateway y envía datos cada 15 segundos.
     Los datos incluyen:
     - ID del paciente
-    - Tipo de sensor (blood_pressure)
     - Valor de presión (sistólica/diastólica)
-    - Unidad de medida (mmHg)
     """
     while True:
         systolic, diastolic = generate_blood_pressure()
         data = {
             "patient_id": PATIENT_ID,
-            "sensor_type": "blood_pressure",
-            "value": f"{systolic}/{diastolic}",
-            "unit": "mmHg"
+            "value": f"{systolic}/{diastolic}"
         }
         
         try:

@@ -38,9 +38,7 @@ def handle_temperature():
     Espera un JSON con el formato:
     {
         "patient_id": str,
-        "sensor_type": "temperature",
-        "value": str,
-        "unit": "°C"
+        "value": str
     }
     
     Returns:
@@ -49,8 +47,13 @@ def handle_temperature():
     data = request.json
     print(f"Received temperature data: {data}")
     
-    # Publicar en MQTT
-    mqtt_client.publish(MQTT_TOPIC, json.dumps(data))
+    # Publicar en MQTT con tipo de sensor
+    mqtt_data = {
+        "patient_id": data["patient_id"],
+        "sensor_type": "temperature",
+        "value": data["value"]
+    }
+    mqtt_client.publish(MQTT_TOPIC, json.dumps(mqtt_data))
     
     return jsonify({"status": "success"}), 200
 
@@ -78,8 +81,7 @@ class HealthcareService(healthcare_pb2_grpc.HealthcareServicer):
         data = {
             "patient_id": request.patient_id,
             "sensor_type": "heart_rate",
-            "value": request.heart_rate,
-            "unit": "bpm"
+            "value": str(request.heart_rate)
         }
         mqtt_client.publish(MQTT_TOPIC, json.dumps(data))
         
@@ -106,8 +108,13 @@ async def handle_bloodpressure(websocket, path):
         data = json.loads(message)
         print(f"Received blood pressure data: {data}")
         
-        # Publicar en MQTT
-        mqtt_client.publish(MQTT_TOPIC, json.dumps(data))
+        # Publicar en MQTT con tipo de sensor
+        mqtt_data = {
+            "patient_id": data["patient_id"],
+            "sensor_type": "blood_pressure",
+            "value": data["value"]
+        }
+        mqtt_client.publish(MQTT_TOPIC, json.dumps(mqtt_data))
 
 def start_websocket():
     """Inicia el servidor WebSocket en el puerto 5002."""
