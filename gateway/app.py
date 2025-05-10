@@ -1,3 +1,14 @@
+"""
+Gateway IoT multiprotocolo para el sistema de monitoreo de salud.
+
+Este módulo implementa un gateway que soporta múltiples protocolos de comunicación:
+- REST API para datos de temperatura
+- gRPC para datos de ritmo cardíaco
+- WebSocket para datos de presión arterial
+
+Todos los datos recibidos son normalizados y publicados a través de MQTT.
+"""
+
 from flask import Flask, request, jsonify
 import threading
 import paho.mqtt.client as mqtt
@@ -21,6 +32,20 @@ mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
 # REST Endpoint para temperatura
 @app.route('/temperature', methods=['POST'])
 def handle_temperature():
+    """
+    Endpoint REST que recibe datos de temperatura y los publica en MQTT.
+    
+    Espera un JSON con el formato:
+    {
+        "patient_id": str,
+        "sensor_type": "temperature",
+        "value": str,
+        "unit": "°C"
+    }
+    
+    Returns:
+        tuple: (JSON response, HTTP status code)
+    """
     data = request.json
     print(f"Received temperature data: {data}")
     
@@ -34,7 +59,19 @@ import healthcare_pb2
 import healthcare_pb2_grpc
 
 class HealthcareService(healthcare_pb2_grpc.HealthcareServicer):
+    """Implementación del servicio gRPC para datos de ritmo cardíaco."""
+    
     def SendHeartRate(self, request, context):
+        """
+        Maneja las solicitudes gRPC de datos de ritmo cardíaco.
+        
+        Args:
+            request: Objeto HeartRateRequest con patient_id y heart_rate
+            context: Contexto gRPC
+            
+        Returns:
+            HealthResponse: Respuesta con estado de la operación
+        """
         print(f"Received heart rate data: {request}")
         
         # Publicar en MQTT
@@ -49,6 +86,7 @@ class HealthcareService(healthcare_pb2_grpc.HealthcareServicer):
         return healthcare_pb2.HealthResponse(status="success")
 
 def serve_grpc():
+    """Inicia el servidor gRPC en el puerto 5001."""
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     healthcare_pb2_grpc.add_HealthcareServicer_to_server(HealthcareService(), server)
     server.add_insecure_port('[::]:5001')
@@ -57,6 +95,13 @@ def serve_grpc():
 
 # WebSocket para presión arterial
 async def handle_bloodpressure(websocket, path):
+    """
+    Maneja conexiones WebSocket para datos de presión arterial.
+    
+    Args:
+        websocket: Objeto WebSocket para la conexión
+        path: Ruta de la conexión WebSocket
+    """
     async for message in websocket:
         data = json.loads(message)
         print(f"Received blood pressure data: {data}")
@@ -65,6 +110,7 @@ async def handle_bloodpressure(websocket, path):
         mqtt_client.publish(MQTT_TOPIC, json.dumps(data))
 
 def start_websocket():
+    """Inicia el servidor WebSocket en el puerto 5002."""
     asyncio.set_event_loop(asyncio.new_event_loop())
     server = websockets.serve(handle_bloodpressure, "0.0.0.0", 5002)
     asyncio.get_event_loop().run_until_complete(server)

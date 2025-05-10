@@ -1,3 +1,14 @@
+"""
+Subscriber MQTT para el sistema de monitoreo de salud.
+
+Este módulo implementa un subscriber MQTT que:
+1. Se suscribe al tópico de datos de salud
+2. Procesa los mensajes recibidos
+3. Almacena los datos en PostgreSQL
+
+Los datos son almacenados en la tabla 'sensor_readings' con timestamp automático.
+"""
+
 import paho.mqtt.client as mqtt
 import psycopg2
 import json
@@ -10,8 +21,16 @@ DB_USER = os.getenv("POSTGRES_USER", "admin")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "admin")
 DB_NAME = os.getenv("POSTGRES_DB", "healthcare")
 
-# Conexión a PostgreSQL
 def get_db_connection():
+    """
+    Establece y retorna una conexión a la base de datos PostgreSQL.
+    
+    Returns:
+        psycopg2.connection: Objeto de conexión a PostgreSQL
+        
+    Raises:
+        psycopg2.Error: Si hay un error en la conexión
+    """
     conn = psycopg2.connect(
         host=DB_HOST,
         database=DB_NAME,
@@ -20,8 +39,17 @@ def get_db_connection():
     )
     return conn
 
-# Callback cuando se recibe un mensaje MQTT
 def on_message(client, userdata, msg):
+    """
+    Callback que se ejecuta cuando se recibe un mensaje MQTT.
+    
+    Procesa el mensaje y almacena los datos en PostgreSQL.
+    
+    Args:
+        client: Cliente MQTT
+        userdata: Datos de usuario (no utilizados)
+        msg: Mensaje MQTT recibido
+    """
     print(f"Message received on topic {msg.topic}: {msg.payload.decode()}")
     
     conn = None
