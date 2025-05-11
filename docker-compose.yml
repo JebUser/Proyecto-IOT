@@ -39,6 +39,8 @@ services:
       - "5002:5002" # WebSocket
     depends_on:
       - mqtt-broker
+    environment:
+      MQTT_PREFIX: "data/healthcare"
     networks:
       - iot-network
 
@@ -55,6 +57,7 @@ services:
       POSTGRES_USER: "admin"
       POSTGRES_PASSWORD: "admin"
       POSTGRES_DB: "healthcare"
+      MQTT_PREFIX: "data/healthcare"
     networks:
       - iot-network
 

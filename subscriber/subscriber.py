@@ -14,6 +14,7 @@ import psycopg2
 import json
 import os
 import time
+import re
 
 # Configuración de la base de datos
 DB_HOST = os.getenv("POSTGRES_HOST", "postgres")
@@ -21,12 +22,16 @@ DB_USER = os.getenv("POSTGRES_USER", "admin")
 DB_PASSWORD = os.getenv("POSTGRES_PASSWORD", "admin")
 DB_NAME = os.getenv("POSTGRES_DB", "healthcare")
 
-# Mapeo de tipos de sensor a IDs
-SENSOR_TYPE_MAP = {
-    "temperature": 1,  # Temperatura Corporal
-    "heart_rate": 2,   # Ritmo Cardíaco
-    "blood_pressure": 3  # Presión Arterial
+# Mapeo de nombres normalizados de sensor a IDs
+SENSOR_NAME_MAP = {
+    "body_temperature": 1,  # Temperatura Corporal
+    "cardiac_rhythm": 2,    # Ritmo Cardíaco
+    "arterial_pressure": 3  # Presión Arterial
 }
+
+# Prefijo general para tópicos MQTT
+MQTT_PREFIX = os.getenv("MQTT_PREFIX", "data/healthcare")
+MQTT_TOPIC_PATTERN = f"{MQTT_PREFIX}/patients/+/sensors/+"
 
 def get_db_connection():
     """
@@ -59,23 +64,34 @@ def on_message(client, userdata, msg):
     """
     print(f"Message received on topic {msg.topic}: {msg.payload.decode()}")
     
+    # Extraer patient_id y sensor_name del tópico
+    topic_pattern = re.compile(f"{MQTT_PREFIX}/patients/(\d+)/sensors/(\w+)")
+    match = topic_pattern.match(msg.topic)
+    
+    if not match:
+        print(f"Error: formato de tópico incorrecto: {msg.topic}")
+        return
+        
+    patient_id = match.group(1)
+    sensor_name = match.group(2)
+    sensor_id = SENSOR_NAME_MAP.get(sensor_name)
+    
+    if not sensor_id:
+        print(f"Error: sensor desconocido {sensor_name}")
+        return
+    
     conn = None
     cur = None
     try:
         data = json.loads(msg.payload.decode())
-        sensor_id = SENSOR_TYPE_MAP.get(data['sensor_type'])
         
-        if not sensor_id:
-            print(f"Error: tipo de sensor desconocido {data['sensor_type']}")
-            return
-            
         conn = get_db_connection()
         cur = conn.cursor()
         
-        # Insertar datos usando sensor_id
+        # Insertar datos usando sensor_id extraído del tópico
         cur.execute(
             "INSERT INTO sensor_readings (patient_id, sensor_id, value) VALUES (%s, %s, %s)",
-            (data['patient_id'], sensor_id, str(data['value']))
+            (patient_id, sensor_id, str(data['value']))
         )
         
         conn.commit()
@@ -91,13 +107,12 @@ def on_message(client, userdata, msg):
 # Configuración MQTT
 MQTT_BROKER = os.getenv("MQTT_BROKER", "mqtt-broker")
 MQTT_PORT = 1883
-MQTT_TOPIC = "healthcare/sensor_data"
 
 # Configurar cliente MQTT
 client = mqtt.Client()
 client.on_message = on_message
 client.connect(MQTT_BROKER, MQTT_PORT)
-client.subscribe(MQTT_TOPIC)
+client.subscribe(MQTT_TOPIC_PATTERN)
 
-print("Subscriber started. Waiting for messages...")
+print(f"Subscriber started. Waiting for messages on topic {MQTT_TOPIC_PATTERN}...")
 client.loop_forever()

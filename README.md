@@ -57,6 +57,26 @@ healthcare-iot/
    docker-compose up --build
    ```
 
+## Estructura de tópicos MQTT
+
+El sistema utiliza una estructura jerárquica para los tópicos MQTT:
+
+```
+data/healthcare/patients/{patient_id}/sensors/{nombre_sensor}
+```
+
+Donde:
+- `{patient_id}`: El ID del paciente (1, 2, 3, etc.)
+- `{nombre_sensor}`: Identificador normalizado del sensor:
+  - `body_temperature`: Temperatura corporal
+  - `cardiac_rhythm`: Ritmo cardíaco
+  - `arterial_pressure`: Presión arterial
+
+Ejemplos:
+- Para Juan Pérez (ID=1) y su sensor de temperatura: `data/healthcare/patients/1/sensors/body_temperature`
+- Para María García (ID=2) y su sensor de ritmo cardíaco: `data/healthcare/patients/2/sensors/cardiac_rhythm`
+- Para Carlos López (ID=3) y su sensor de presión arterial: `data/healthcare/patients/3/sensors/arterial_pressure`
+
 ## Uso y comprobacion en la base de datos
 
 1. Abrir Docker Desktop
@@ -71,6 +91,8 @@ healthcare-iot/
 ### Consultas
 
 ```bash
+docker exec -it postgres psql -U admin healthcare
+
 -- Ver todos los pacientes
 SELECT * FROM patients;
 
@@ -109,8 +131,14 @@ Ejecutar Ejecutar `stop.bat` (Windows)
 ## Comandos útiles
 
 ```bash
-# Ver tráfico MQTT en tiempo real
-docker exec -it mqtt-broker mosquitto_sub -t "healthcare/sensor_data" -v
+# Ver tráfico MQTT en tiempo real (usar test-mqtt-topics.bat)
+docker exec -it mqtt-broker mosquitto_sub -t "data/healthcare/patients/+/sensors/+" -v
+
+# Escuchar un sensor específico para un paciente
+docker exec -it mqtt-broker mosquitto_sub -t "data/healthcare/patients/1/sensors/body_temperature" -v
+
+# Publicar un mensaje de prueba manualmente
+docker exec -it mqtt-broker mosquitto_pub -t "data/healthcare/patients/1/sensors/body_temperature" -m '{"value": "37.2"}'
 
 # Reconstruir solo el gateway
 docker-compose build gateway

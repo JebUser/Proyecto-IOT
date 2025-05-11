@@ -17,17 +17,47 @@ from concurrent import futures
 import websockets
 import asyncio
 import json
+import os
 
 app = Flask(__name__)
 
 # Configuración MQTT
 MQTT_BROKER = "mqtt-broker"
 MQTT_PORT = 1883
-MQTT_TOPIC = "healthcare/sensor_data"
+
+# Prefijo general para tópicos MQTT
+MQTT_PREFIX = os.getenv("MQTT_PREFIX", "data/healthcare")
+
+# Mapeo de tipos de sensor a nombres normalizados
+SENSOR_TYPE_MAP = {
+    "temperature": "body_temperature",
+    "heart_rate": "cardiac_rhythm",
+    "blood_pressure": "arterial_pressure"
+}
 
 # Cliente MQTT
 mqtt_client = mqtt.Client()
 mqtt_client.connect(MQTT_BROKER, MQTT_PORT)
+
+def publish_to_mqtt(patient_id, sensor_type, value):
+    """
+    Publica datos en MQTT con el formato de tópico nuevo.
+    
+    Args:
+        patient_id: ID del paciente
+        sensor_type: Tipo de sensor
+        value: Valor de la lectura
+    """
+    sensor_name = SENSOR_TYPE_MAP.get(sensor_type)
+    if not sensor_name:
+        print(f"Error: tipo de sensor desconocido {sensor_type}")
+        return
+        
+    topic = f"{MQTT_PREFIX}/patients/{patient_id}/sensors/{sensor_name}"
+    data = {"value": value}
+    
+    mqtt_client.publish(topic, json.dumps(data))
+    print(f"Published to {topic}: {data}")
 
 # REST Endpoint para temperatura
 @app.route('/temperature', methods=['POST'])
@@ -47,13 +77,8 @@ def handle_temperature():
     data = request.json
     print(f"Received temperature data: {data}")
     
-    # Publicar en MQTT con tipo de sensor
-    mqtt_data = {
-        "patient_id": data["patient_id"],
-        "sensor_type": "temperature",
-        "value": data["value"]
-    }
-    mqtt_client.publish(MQTT_TOPIC, json.dumps(mqtt_data))
+    # Publicar en MQTT con el nuevo formato de tópico
+    publish_to_mqtt(data["patient_id"], "temperature", data["value"])
     
     return jsonify({"status": "success"}), 200
 
@@ -77,13 +102,8 @@ class HealthcareService(healthcare_pb2_grpc.HealthcareServicer):
         """
         print(f"Received heart rate data: {request}")
         
-        # Publicar en MQTT
-        data = {
-            "patient_id": request.patient_id,
-            "sensor_type": "heart_rate",
-            "value": str(request.heart_rate)
-        }
-        mqtt_client.publish(MQTT_TOPIC, json.dumps(data))
+        # Publicar en MQTT con el nuevo formato de tópico
+        publish_to_mqtt(str(request.patient_id), "heart_rate", str(request.heart_rate))
         
         return healthcare_pb2.HealthResponse(status="success")
 
@@ -108,13 +128,8 @@ async def handle_bloodpressure(websocket, path):
         data = json.loads(message)
         print(f"Received blood pressure data: {data}")
         
-        # Publicar en MQTT con tipo de sensor
-        mqtt_data = {
-            "patient_id": data["patient_id"],
-            "sensor_type": "blood_pressure",
-            "value": data["value"]
-        }
-        mqtt_client.publish(MQTT_TOPIC, json.dumps(mqtt_data))
+        # Publicar en MQTT con el nuevo formato de tópico
+        publish_to_mqtt(data["patient_id"], "blood_pressure", data["value"])
 
 def start_websocket():
     """Inicia el servidor WebSocket en el puerto 5002."""
